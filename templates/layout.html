@@ -1,14 +1,25 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config.title }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
         body {
-            padding-top: 56px;
+            padding-top: 0;
+            margin: 0;
+        }
+        .navbar {
+            margin-bottom: 0;
+        }
+        .navbar-nav {
+            margin-left: auto;
+            flex-direction: row;
+        }
+        .navbar-nav .nav-item {
+            margin-left: 15px;
         }
         .jumbotron {
             background-color: #f8f9fa;
@@ -29,90 +40,56 @@
         .dark-mode .text-black-important {
             color: #000000 !important;
         }
+        .navbar-light .navbar-nav .nav-link {
+            color: #000000;
+        }
+        .navbar-light .navbar-nav .nav-link:hover,
+        .navbar-light .navbar-nav .nav-link:focus {
+            color: #0056b3;
+        }
+        .navbar-brand img {
+            height: 30px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="#">{{ config.title }}</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" href="#">
+                <img src="{{ url_for('static', filename='images/penguin-icon.png') }}" alt="Penguin Icon"> AutoQuest
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarResponsive">
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/novo">Configuração</a>
+                        <a class="nav-link" href="/chat">Chat</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/config">Config</a>
+                    </li>
+                    <li class="nav-item">
+                        <button id="darkModeToggle" class="btn btn-outline-secondary">Modo Escuro</button>
                     </li>
                 </ul>
-                <button class="btn btn-outline-light ml-3" id="darkModeToggle">Modo Escuro</button>
             </div>
         </div>
     </nav>
-    <main role="main" class="container">
-        {% block content %}
-        <div class="jumbotron text-center">
-            <div class="container">
-                <h1 class="text-black-important"><i class="fas fa-car"></i> {{ config.botname }}</h1>
-                <h2 class="text-black-important">{{ config.subtitle }}</h2>
-            </div>
-        </div>
-        <div class="container mt-4">
-            <div id="responses" class="alert alert-success" role="alert">
-               {{ config.message }}
-            </div>
- 
-            <form method="POST" class="needs-validation" novalidate>
-                <div class="form-group">
-                    <label for="input">Pergunte ao {{ config.botname }}:</label>
-                    <input type="text" value="{{ config.input }}" id="input" name="input" class="form-control" placeholder="Digite sua pergunta aqui..." required>
-                    <div class="invalid-feedback">
-                        Por favor, insira uma pergunta.
-                    </div>
-                </div>
-                <div class="text-center">
-                    <input type="submit" class="btn btn-primary btn-lg" value="Enviar">
-                </div>
-            </form>
-            <div class="form-group mt-4">
-                <label for="context">Contexto da Busca Vetorial:</label>
-                <textarea id="context" class="form-control" rows="5" readonly>{{ config.context }}</textarea>
-            </div>
-        </div>
-
-        <script>
-            // Example starter JavaScript for disabling form submissions if there are invalid fields
-            (function() {
-                'use strict';
-                window.addEventListener('load', function() {
-                    // Fetch all the forms we want to apply custom Bootstrap validation styles to
-                    var forms = document.getElementsByClassName('needs-validation');
-                    // Loop over them and prevent submission
-                    var validation = Array.prototype.filter.call(forms, function(form) {
-                        form.addEventListener('submit', function(event) {
-                            if (form.checkValidity() === false) {
-                                event.preventDefault();
-                                event.stopPropagation();
-                            }
-                            form.classList.add('was-validated');
-                        }, false);
-                    });
-                }, false);
-            })();
-        </script>
-        {% endblock %}
-    </main>
-    <footer class="bg-dark text-white text-center py-3">
-        <p>&copy; 2025 AutoQuest. Todos os direitos reservados.</p>
-    </footer>
+    <div class="container mt-5 pt-5">
+        {% block content %}{% endblock %}
+    </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         document.getElementById('darkModeToggle').addEventListener('click', function() {
             document.body.classList.toggle('dark-mode');
+            this.textContent = document.body.classList.contains('dark-mode') ? 'Modo Claro' : 'Modo Escuro';
         });
     </script>
 </body>

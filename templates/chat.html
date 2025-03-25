@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='chat.css') }}">
+<div class="container mt-4">
+    <div class="chat-container">
+        <div id="chat-box" class="chat-box">
+            {% for entry in config.chat_history %}
+                <div class="chat-entry">
+                    <p><strong>Você:</strong> {{ entry.question }}</p>
+                    <p><strong>{{ config.botname }}:</strong> {{ entry.answer }}</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <form method="POST" class="chat-form needs-validation" novalidate>
+            <div class="form-group">
+                <input type="text" value="{{ config.input }}" id="input" name="input" class="form-control" placeholder="Digite sua pergunta aqui..." required>
+                <div class="invalid-feedback">
+                    Por favor, insira uma pergunta.
+                </div>
+            </div>
+            <input type="hidden" name="chat_history" value='{{ config.chat_history | tojson }}'>
+            <div class="text-center">
+                <input type="submit" class="btn btn-primary btn-lg" value="Enviar">
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

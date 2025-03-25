@@ -1,8 +1,8 @@
+from flask import Flask, render_template, request, redirect, url_for
 import os
 import json
 import logging
 import google.cloud.logging
-from flask import Flask, render_template, request, redirect, url_for
 
 from google.cloud import firestore
 from google.cloud.firestore_v1.vector import Vector
@@ -122,7 +122,10 @@ def ask_gemini(question, collection_name):
     response_text = response.text if response else "{}"  # Default to empty JSON if no response
     try:
         response_json = json.loads(response_text)  # Parse the JSON string into a dictionary
-        answer = response_json.get("resposta", "No answer found.")  # Get the "resposta" field
+        if isinstance(response_json, dict):
+            answer = response_json.get("Resposta") or response_json.get("resposta") or response_json.get("answer", "No answer found.")  # Get the "Resposta", "resposta", or "answer" field
+        else:
+            answer = response_text  # If response_json is not a dict, use the raw response text
     except (json.JSONDecodeError, IndexError, KeyError):
         answer = "Error: Unable to parse response."
 
@@ -184,6 +187,72 @@ def novo():
     
     return render_template('novo.html', collections=collections, **model_config)
 
-# Run the Flask app
+@app.route("/chat", methods=["POST", "GET"])
+def chat():
+    if request.method == "GET":
+        question = ""
+        answer = "Olá, eu sou o AutoQuest, como posso ajudar você hoje?"
+        context = ""
+        chat_history = []
+
+    else:
+        question = request.form["input"]
+        chat_history = request.form.get("chat_history", "[]")
+        print("chat_history (raw):", chat_history)
+        chat_history = json.loads(chat_history)
+        print("chat_history (parsed):", chat_history)
+
+        # Log the user's question
+        logging.info(question, extra={"labels": {"service": "cymbal-service", "component": "question"}})
+
+        # Get the answer from Gemini based on the vector database search
+        answer, context = ask_gemini(question, model_config["collection_name"])
+
+        # Add the question and answer to the chat history
+        if isinstance(chat_history, list):
+            chat_history.append({"question": question, "answer": answer})
+        else:
+            chat_history = [{"question": question, "answer": answer}]
+        print("chat_history (updated):", chat_history)
+
+    # Log the generated answer
+    logging.info(answer, extra={"labels": {"service": "cymbal-service", "component": "answer"}})
+    print("Answer: " + answer)
+
+    # Display the chat page with the required variables set
+    config = {
+        "title": BOTNAME,
+        "subtitle": SUBTITLE,
+        "botname": BOTNAME,
+        "message": answer,
+        "input": question,
+        "context": context,
+        "chat_history": chat_history  # Pass the list directly
+    }
+    print("config:", config)
+
+    return render_template("chat.html", config=config)
+
+@app.route("/config", methods=["POST", "GET"])
+def config():
+    if request.method == "POST":
+        # Update model configuration with the new values from the form
+        model_config["model_name"] = request.form["model_name"]
+        model_config["temperature"] = float(request.form["temperature"])
+        model_config["max_tokens"] = int(request.form["max_tokens"])
+        model_config["mime_type"] = request.form["mime_type"]
+        model_config["collection_name"] = request.form["collection_name"]
+        
+        # Update the generative model with the new model name
+        global gen_model
+        gen_model = GenerativeModel(model_name=model_config["model_name"])
+        
+        return redirect(url_for("config"))
+    
+    # Get all collections from Firestore
+    collections = [collection.id for collection in db.collections()]
+    
+    return render_template('config.html', collections=collections, **model_config)
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
